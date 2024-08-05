@@ -18,10 +18,10 @@ const Text = styled.p`
   font-weight: bold;
 `;
 
-const SaleText= styled.p`
-    color: #d94844;
-    font-weight: bold;
-`
+const SaleText = styled.p`
+  color: #d94844;
+  font-weight: bold;
+`;
 const Price = styled.p`
   color: #656565;
   font-weight: bold;
@@ -52,39 +52,40 @@ const UserHome = () => {
   const [selectedItem, setSelectedItem] = useState(null); // 선택된 아이템 상태 관리
   const [quantity, setQuantity] = useState(0); // 수량 관리하는 useState
   const [maxQuantity, setMaxQuantity] = useState(1); // 주문가능 최대수량
-  const categories = ['BAK', 'BUT', 'VEG', 'FRU', 'SID', 'ETC'];
+  const categories = ["BAK", "BUT", "VEG", "FRU", "SID", "ETC"];
   const [isConfirmed, setConfirmed] = useState(false); // 떨이픽 누르면 "예약되었습니다" 관리하는 거
   const [isFailed, setFailed] = useState(false);
+  const [treeMessage, setTreeMessage] = useState(false); // 예약 완료 후에 '소나무 몇그루" 관리하는 useState
 
   useEffect(() => {
     // 데이터를 가져오는 함수
     const fetchData = async () => {
-        try {
-            const requests = categories.map(category =>
-                axios.get(`http://13.125.100.193/buyer/category/${category}/list`)
-            );
+      try {
+        const requests = categories.map((category) =>
+          axios.get(`http://13.125.100.193/buyer/category/${category}/list`)
+        );
 
-            const responses = await Promise.all(requests);
-            const allData = responses.flatMap(response => response.data);
+        const responses = await Promise.all(requests);
+        const allData = responses.flatMap((response) => response.data);
 
-            const formattedData = allData.map(item => ({
-                id: item.id,
-                photo: item.photo,
-                name: item.name,
-                amount: item.amount,
-                price: item.price,
-                sale_price: item.sale_price,
-                store: item.store.name
-            }));
+        const formattedData = allData.map((item) => ({
+          id: item.id,
+          photo: item.photo,
+          name: item.name,
+          amount: item.amount,
+          price: item.price,
+          sale_price: item.sale_price,
+          store: item.store.name,
+        }));
 
-            setStoreInfo(formattedData);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
+        setStoreInfo(formattedData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
 
     fetchData();
-}, []);
+  }, []);
 
   // 모달 팝업 창 토글하는 함수
   const toggleModal = (item) => {
@@ -123,9 +124,14 @@ const UserHome = () => {
     setShowModal(false); // 주문 팝업 안보이게하고
     setConfirmed(true); // 떨이픽 true로 바꾸기 (예약완료)
     console.log("예약완료");
+
     setTimeout(() => {
-      setConfirmed(false);
-    }, 3000); // "예약완료" 3초뒤에 사라지게 함
+      setConfirmed(false); // 떨이픽 다시 false로
+      setTreeMessage(true); // 소나무 메세지 뜨게하는 거 true
+      setTimeout(() => {
+        setTreeMessage(false); // 소나무 메시지 없애기
+      }, 3000);
+    }, 2000);
   };
 
   // 떨이 예약 실패
@@ -159,18 +165,18 @@ const UserHome = () => {
       <div className="store">실시간 떨이 상품</div>
       <main>
         <div className="storecontainer">
-        {storeInfo.map((store) => (
-                <Store
-                  key={store.id}
-                  photo={store.photo}
-                  name={store.name}
-                  store={store.store}
-                  amount={store.amount}
-                  price={store.price}
-                  sale_price={store.sale_price}
-                  onClick={() => toggleModal(store)} // Store 항목 클릭 시 모달 토글
-                />
-            ))}
+          {storeInfo.map((store) => (
+            <Store
+              key={store.id}
+              photo={store.photo}
+              name={store.name}
+              store={store.store}
+              amount={store.amount}
+              price={store.price}
+              sale_price={store.sale_price}
+              onClick={() => toggleModal(store)} // Store 항목 클릭 시 모달 토글
+            />
+          ))}
         </div>
       </main>
       {showModal && selectedItem && (
@@ -196,8 +202,14 @@ const UserHome = () => {
           </QuantityContainer>
         </ModalPopup>
       )}
-        {isConfirmed && <ConfirmationPopup message={"예약이 완료되었어요"} />}
-        {isFailed && <ConfirmationPopup message={"예약을 실패했어요"} />}
+      {isConfirmed && <ConfirmationPopup message={"예약이 완료되었어요"} />}
+      {treeMessage && (
+        <ConfirmationPopup
+          message={"소나무 0.29그루를 심었어요!"}
+          showTree={true}
+        />
+      )}
+      {isFailed && <ConfirmationPopup message={"예약을 실패했어요"} />}
       <footer>
         <Navbar />
       </footer>
